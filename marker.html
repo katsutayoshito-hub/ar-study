@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; }
+    #container { width: 100vw; height: 100vh; overflow: hidden; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+    }
+  }
+  </script>
+</head>
+<body>
+<div id="container"></div>
+<script type="module">
+  import * as THREE from "three";
+  import { MindARThree } from "mindar-image-three";
+
+  // ① パッケージユニット一式を発注（カメラ・追尾・3D描画入り）
+  const mindarThree = new MindARThree({
+    container: document.querySelector("#container"),
+    imageTargetSrc: "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind"
+  });
+
+  // ② ユニットから、おなじみの3部品を取り出す
+  const { renderer, scene, camera } = mindarThree;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+sun.position.set(1, 1, 2);
+scene.add(sun);
+
+  // ③ マーカーNo.0に固定された「架台」
+  const anchor = mindarThree.addAnchor(0);
+
+  
+  // ④ 緑の半透明板を架台に据付（カード実寸比 1:0.552）
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 0.552),
+    new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.4 })
+  );
+  anchor.group.add(plane);
+ // ④+ CO2分子（O=C=O）をユニット組立
+ const co2 = new THREE.Group();
+  const mat = c => new THREE.MeshLambertMaterial({ color: c });
+
+  const carbon = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), mat(0x333333));
+  co2.add(carbon);
+
+  [-0.13, 0.13].forEach(x => {
+    const o = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 16), mat(0xdd2222));
+    o.position.x = x;
+    co2.add(o);
+  });
+
+  [-0.065, 0.065].forEach(x => {
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.07), mat(0xbbbbbb));
+    b.position.x = x;
+    b.rotation.z = Math.PI / 2;   // 縦向き規格品を横に倒す
+    co2.add(b);
+  });
+
+  co2.position.z = 0.45;   // カード上空に浮かせる
+  anchor.group.add(co2);
+
+  // ④++ ガス配管ルート（スプライン）と流れる粒子
+  const route = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.5, -0.28, 0.05),
+    new THREE.Vector3(-0.2,  0.0,  0.15),
+    new THREE.Vector3( 0.2,  0.1,  0.30),
+    new THREE.Vector3( 0.5,  0.28, 0.55),
+  ]);
+
+  const routeLine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(route.getPoints(50)),
+    new THREE.LineBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.35 })
+  );
+  anchor.group.add(routeLine);
+
+  const particles = [];
+  for (let i = 0; i < 20; i++) {
+    const p = new THREE.Mesh(
+      new THREE.SphereGeometry(0.02, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0x00eaff })
+    );
+    p.userData.t = i / 20;   // 配管内の現在位置（0=入口, 1=出口）
+    particles.push(p);
+    anchor.group.add(p);
+  }
+  // ⑤ 発見・喪失をログに記録
+  anchor.onTargetFound = () => console.log("ロックオン");
+  anchor.onTargetLost  = () => console.log("ロスト");
+
+  // ⑥ 起動シーケンス → 描画ループ
+  const start = async () => {
+    await mindarThree.start();
+
+  renderer.setAnimationLoop(() => {
+      co2.rotation.z += 0.01;
+      particles.forEach(p => {
+        p.userData.t = (p.userData.t + 0.004) % 1;   // 流速
+        p.position.copy(route.getPoint(p.userData.t));
+      });
+      renderer.render(scene, camera);
+    })};
+    start();
+
+
+</script>
+</body>
+</html>

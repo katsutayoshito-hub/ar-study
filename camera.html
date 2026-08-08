@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; }
+    video { width: 100vw; height: 100vh; object-fit: cover; }
+  </style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<script>
+  // ⓪ カメラAPIがそもそも使える経路か確認
+  if (!navigator.mediaDevices) {
+    alert("この開き方ではカメラAPIが無効です（file://で開いていませんか？）");
+  } else {
+    // ① カメラの使用許可を申請
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },  // 背面カメラ希望
+      audio: false
+    })
+    // ② 許可が下りたら映像ストリームを接続
+    .then(stream => {
+      document.getElementById("cam").srcObject = stream;
+    })
+    // ③ 却下・失敗なら理由を表示
+    .catch(err => alert("カメラを起動できません: " + err.name));
+  }
+</script>
+</body>
+</html>
