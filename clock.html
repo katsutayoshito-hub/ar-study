@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; }
+    #container { width: 100vw; height: 100vh; overflow: hidden; }
+  </style>
+  <script type="importmap">
+  { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+  } }
+  </script>
+</head>
+<body>
+<div id="container"></div>
+<script type="module">
+  import * as THREE from "three";
+  import { MindARThree } from "mindar-image-three";
+
+  // ① 時計の指紋データ（clock-target.jpg から生成）を指定
+  const mindarThree = new MindARThree({
+    container: document.querySelector("#container"),
+    imageTargetSrc: "./clock.mind",
+    maxTrack: 1,
+  });
+  const { renderer, scene, camera } = mindarThree;
+
+  // ② 日本語ラベル製造機：Canvasに描いた文字を「看板」にする
+  function makeLabel(text) {
+    const cv = document.createElement("canvas");
+    cv.width = 1024; cv.height = 256;
+    const g = cv.getContext("2d");
+    g.fillStyle = "rgba(20,60,45,0.85)";  g.fillRect(0, 0, 1024, 256);
+    g.fillStyle = "#8ac53f";              g.fillRect(0, 0, 22, 256);
+    g.fillStyle = "#ffffff";
+    g.font = "bold 100px sans-serif";
+    g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(text, 522, 138);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(cv), transparent: true, opacity: 0
+    }));
+    sp.scale.set(1.6, 0.4, 1);
+    return sp;
+  }
+
+  // ③ アンカーNo.0（時計）に看板を据付
+  const anchor = mindarThree.addAnchor(0);
+  const label = makeLabel("こちらは時計です");
+  label.position.set(0, 0.55, 0.25);
+  anchor.group.add(label);
+
+  // ④ 発見・喪失でスイッチを切り替え（演出は⑤のループ側で滑らかに）
+  let visible = false;
+  anchor.onTargetFound = () => { visible = true;  console.log("発見: 時計"); };
+  anchor.onTargetLost  = () => { visible = false; console.log("ロスト: 時計"); };
+
+  // ⑤ 起動 → 毎フレーム、透明度と高さを追従させて「ふわっ」と浮かび上がらせる
+  let t = 0;
+  const start = async () => {
+    await mindarThree.start();
+    renderer.setAnimationLoop(() => {
+      t += 0.03;
+      const m = label.material;
+      m.opacity += ((visible ? 1 : 0) - m.opacity) * 0.08;      // フェードイン／アウト
+      label.position.y = 0.55 + (1 - m.opacity) * -0.15         // 出現時に下からせり上がり
+                              + Math.sin(t) * 0.02;             // 表示中はゆらゆら漂う
+      renderer.render(scene, camera);
+    });
+  };
+  start();
+</script>
+</body>
+</html>
