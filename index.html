@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AR学習デモ一覧</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #f4f6f5; color: #143c2d; }
+    header { background: #143c2d; color: #fff; padding: 20px 16px; }
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 6px 0 0; font-size: 13px; color: #8ac53f; }
+    ul { list-style: none; margin: 0; padding: 16px; }
+    li { margin-bottom: 12px; }
+    a {
+      display: block; background: #fff; border-radius: 10px;
+      padding: 16px; text-decoration: none; color: inherit;
+      border-left: 6px solid #8ac53f; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    a strong { display: block; font-size: 16px; }
+    a span { display: block; font-size: 13px; color: #556; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>AR学習デモ一覧</h1>
+  <p>カメラを使うページは、アクセス時に「許可」を選んでください</p>
+</header>
+<ul>
+  <li><a href="./clock.html">
+    <strong>時計AR</strong>
+    <span>壁の時計にかざすと「こちらは時計です」が浮かび上がる</span>
+  </a></li>
+  <li><a href="./devices.html">
+    <strong>機器台帳AR</strong>
+    <span>キーボードにかざすと説明ラベルを表示</span>
+  </a></li>
+  <li><a href="./marker.html">
+    <strong>マーカーAR（CO2分子）</strong>
+    <span>サンプルカードの上に分子模型と配管の粒子を表示</span>
+  </a></li>
+  <li><a href="./camera.html">
+    <strong>カメラ確認</strong>
+    <span>背面カメラの映像を全画面表示するだけの動作確認</span>
+  </a></li>
+  <li><a href="./first3D.html">
+    <strong>3D基礎</strong>
+    <span>Three.jsで回転するボックス（カメラ不使用）</span>
+  </a></li>
+</ul>
+</body>
+</html>
